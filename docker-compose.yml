@@ -1,4 +1,3 @@
-version: "3.8"
 services:
   mosquitto:
     image: eclipse-mosquitto:2.0
@@ -8,6 +7,19 @@ services:
     volumes:
       - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf
       - mosquitto_data:/mosquitto/data
+  
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ems_frontend
+    ports:
+      - "4173:4173"
+    environment:
+      - VITE_API_BASE=http://backend:8000   # <-- inside Docker network
+    depends_on:
+      - backend
+
 
   influxdb:
     image: influxdb:1.8
@@ -32,7 +44,9 @@ services:
       - influxdb
 
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dockerfile
     container_name: ems_backend
     ports:
       - "8000:8000"
@@ -49,7 +63,9 @@ services:
       - influxdb
 
   simulator:
-    build: ./simulator
+    build:
+      context: ./simulator
+      dockerfile: Dockerfile.dockerfile
     container_name: ems_simulator
     environment:
       - MQTT_HOST=mosquitto
